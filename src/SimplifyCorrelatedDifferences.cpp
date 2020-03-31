@@ -19,6 +19,23 @@ using std::pair;
 using std::string;
 using std::vector;
 
+class NormalizeVarNames : public IRMutator {
+    using IRMutator::visit;
+
+    std::map<string, string> remapping;
+
+    Expr visit(const Variable *op) override {
+        const char *names = "xyzwuv";
+        size_t s = remapping.size();
+        string candidate =
+            (s < 6 ?
+                 string(names + s, names + s + 1) :
+                 (string("v") + std::to_string(s - 6)));
+        auto p = remapping.insert({op->name, candidate});
+        return Variable::make(op->type, p.first->second);
+    }
+};
+
 class SimplifyCorrelatedDifferences : public IRMutator {
     using IRMutator::visit;
 
@@ -167,7 +184,7 @@ class SimplifyCorrelatedDifferences : public IRMutator {
                     // truncated cones have a constant upper or lower
                     // bound that isn't apparent when expressed in the
                     // form in the LHS below
-                    rewrite(min(x, c0) - max(x, c1), min(min(x - c0, c1 - x), fold(min(0, c0 - c1)))) ||
+                    rewrite(min(x, c0) - max(x, c1), min(min(c0 - x, x - c1), fold(min(0, c0 - c1)))) ||
                     rewrite(max(x, c0) - min(x, c1), max(max(c0 - x, x - c1), fold(max(0, c0 - c1)))) ||
                     rewrite(min(x, y) - max(x, z), min(min(x, y) - max(x, z), 0)) ||
                     rewrite(max(x, y) - min(x, z), max(max(x, y) - min(x, z), 0)) ||
@@ -213,10 +230,14 @@ class SimplifyCorrelatedDifferences : public IRMutator {
             e = PartiallyCancelDifferences().mutate(e);
             e = simplify(e);
 
-            if ((debug::debug_level() > 0) &&
+            if ((debug::debug_level() >= 0) &&
                 is_monotonic(e, loop_var, monotonic) == Monotonic::Unknown) {
                 // Might be a missed simplification opportunity. Log to help improve the simplifier.
-                debug(1) << "Warning: expression is non-monotonic in loop variable " << loop_var << ": " << e << "\n";
+                NormalizeVarNames n;
+                Expr normalized_var = n.mutate(Variable::make(Int(32), loop_var));
+                Expr normalized = n.mutate(e);
+                debug(0) << "Warning: expression is non-monotonic in loop variable "
+                         << normalized_var << ":\n " << normalized << "\n";
             }
         }
         return e;
