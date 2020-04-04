@@ -510,21 +510,15 @@ void compile(
     for (const std::string &input_name : pipeline.input_names) {
         inputs.push_back(pipeline.model->inputs.at(input_name));
     }
-    Halide::Target tgt = Halide::get_host_target();
+    Halide::Target tgt = Halide::Target("riscv-64-linux-no_asserts-no_runtime-no_bounds_query");;
     // tgt.set_feature(Halide::Target::Debug, true);
     // tgt.set_feature(Halide::Target::NoBoundsQuery, true);
     // tgt.set_feature(Halide::Target::TracePipeline, true);
     // tgt.set_feature(Halide::Target::TraceRealizations, true);
     // pipeline.rep->compile_to_lowered_stmt(std::string("/tmp/")+lib_name+".stmt",
     // inputs, Halide::Text, tgt);
-    pipeline.rep->compile_to_file(
-        std::string("/tmp/") + lib_name, inputs, func_name, tgt);
-    pipeline.rep->compile_to_static_library(
-        std::string("/tmp/") + lib_name, inputs, func_name, tgt);
-    pipeline.rep->compile_to_c(
-        std::string("/tmp/") + lib_name + ".cpp", inputs, func_name, tgt);
-    pipeline.rep->compile_to_header(
-        std::string("/tmp/") + lib_name + ".h", inputs, func_name, tgt);
+    pipeline.rep->compile_to_c(lib_name + ".cpp", inputs, func_name, tgt);
+    pipeline.rep->compile_to_header(lib_name + ".h", inputs, func_name, tgt);
 }
 
 void print_loop_nest(const HalideModel &pipeline) {
