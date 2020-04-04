@@ -1,3 +1,4 @@
+**/gradlew.bat
 /tutorial/figures/tmp/trace.bin
 /apps/*/bin
 /apps/*/cmake_build
