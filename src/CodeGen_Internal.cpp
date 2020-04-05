@@ -577,6 +577,7 @@ void get_target_options(const llvm::Module &module, llvm::TargetOptions &options
     options.FloatABIType =
         use_soft_float_abi ? llvm::FloatABI::Soft : llvm::FloatABI::Hard;
     options.RelaxELFRelocations = false;
+    options.MCOptions.ABIName = "lp64d";
 }
 
 void clone_target_options(const llvm::Module &from, llvm::Module &to) {
