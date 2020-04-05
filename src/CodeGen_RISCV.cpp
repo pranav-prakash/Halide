@@ -21,7 +21,7 @@ string CodeGen_RISCV::mcpu() const {
 }
 
 string CodeGen_RISCV::mattrs() const {
-    return "";
+    return "+f,+d,+a,+m,+c";
 }
 
 bool CodeGen_RISCV::use_soft_float_abi() const {
